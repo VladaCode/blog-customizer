@@ -13,6 +13,7 @@ import {
 	defaultArticleState,
 	ArticleStateType,
 	OptionType,
+	backgroundColors,
 } from 'src/constants/articleProps';
 import styles from './ArticleParamsForm.module.scss';
 import clsx from 'clsx';
@@ -29,13 +30,13 @@ export const ArticleParamsForm = ({
 	onReset,
 	initialState, // Принимаем начальное состояние
 }: TArticleParamsFormProps) => {
-	const [isOpen, setIsOpen] = useState(false); // Состояние открытия/закрытия формы
+	const [isMenuOpen, setIsMenuOpen] = useState(false); // Состояние открытия/закрытия формы
 	const [formState, setFormState] = useState(initialState); // Инициализируем состояние формы переданным initialState
 	const asideRef = useRef<HTMLDivElement>(null); // Ref для сайдбара, чтобы отслеживать клики вне его области
 
 	// Обработчик открытия/закрытия сайдбара
 	const toggleSidebar = () => {
-		setIsOpen(!isOpen); //Установка нового значения isOpen на противоложное текущему
+		setIsMenuOpen(!isMenuOpen); //Установка нового значения isOpen на противоложное текущему
 	};
 
 	useEffect(() => {
@@ -44,18 +45,21 @@ export const ArticleParamsForm = ({
 			// Если сайдбар существуе(asideRef.current) и клик был вне его области
 			if (asideRef.current && !asideRef.current.contains(e.target as Node)) {
 				//Закрытие сайдбара, устанавливая  setIsOpen в false
-				setIsOpen(false);
+				setIsMenuOpen(false);
 			}
 		};
 
+		 // Если меню открыто, навешиваем обработчик
+		 if (isMenuOpen) {
 		// Добавление обработчика события
 		document.addEventListener('mousedown', handleClickOutside);
+		 }
 
 		// Удаляем обработчик при размонтировании компанента
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
-	}, []);
+	}, [isMenuOpen]); // Зависимость от isMenuOpen, чтобы эффект срабатывал при его изменении
 
 	//Обработчик изменение значений в форме
 	const handleChange = (field: keyof ArticleStateType, value: OptionType) => {
@@ -78,9 +82,9 @@ export const ArticleParamsForm = ({
 
 	return (
 		<div ref={asideRef}>
-			<ArrowButton isOpen={isOpen} onClick={toggleSidebar} />
+			<ArrowButton isOpen={isMenuOpen} onClick={toggleSidebar} />
 			<aside
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
+				className={clsx(styles.container, { [styles.container_open]: isMenuOpen })}>
 				<form
 					className={styles.form}
 					onSubmit={(e) => {
@@ -116,6 +120,13 @@ export const ArticleParamsForm = ({
 						onChange={(value) => handleChange('fontColor', value)}
 						title='Цвет шрифта'
 					/>
+					<Separator />
+					<Select
+						options={backgroundColors}
+						selected={formState.backgroundColor}
+						onChange={(value) => handleChange('backgroundColor', value)}
+						title='Цвет фона'
+					/>
 					<Select
 						options={contentWidthArr}
 						selected={formState.contentWidth}
@@ -133,7 +144,6 @@ export const ArticleParamsForm = ({
 							title='Применить'
 							htmlType='submit'
 							type='apply'
-							onClick={handleApply}
 						/>
 					</div>
 				</form>
